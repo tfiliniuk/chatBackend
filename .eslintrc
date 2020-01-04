@@ -1,0 +1,12 @@
+{
+    "root": true,
+    "extends": "eslint:recommended",
+    "env": {
+        "node": true
+    },
+    "rules": {
+        "strict": [2, "global"]
+    },
+    "parser": "babel-eslint",
+    "parserOptions": { "sourceType": "module" }
+}

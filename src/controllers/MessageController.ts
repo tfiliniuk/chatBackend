@@ -1,38 +1,59 @@
-import express from "express";
-import { MessageModel } from "../models";
+import express from 'express';
+import socket from 'socket.io';
+
+import { MessageModel } from '../models';
 
 class MessageController {
-  index(req: express.Request, res: express.Response) {
+  io: socket.Server;
+
+  constructor(io: socket.Server) {
+    this.io = io;
+  }
+
+  index = (req: express.Request, res: express.Response) => {
     const dialogId: string = req.query.dialog;
     MessageModel.find({ dialog: dialogId})
-    .populate(["dialog"])
+    .populate(['dialog'])
     .exec(function(err, message) {
       if(err) {
         return res.status(404).json({
-          message: "Messages not found"
+          message: 'Messages not found'
         })
       }
       return res.json(message)
     })
-  }
+  };
 
-  create(req: express.Request, res: express.Response) {
-    const userId = "5e0a4752899e6a0c98d65392";
+  create = (req: any, res: express.Response) => {
+    const userId = req.user._id;
     const postData = {
       text: req.body.text,
       user: userId,
       dialog: req.body.dialog_id,
     };
+
     const message = new MessageModel(postData);
-    message.save().then((obj: any) => {
-      res.json(obj)
+
+    message
+    .save()
+    .then((obj: any) => {
+      res.json(obj);
+      obj.populate("dialog", (err: any, message: any) => {
+        if (err) {
+          return res.status(500).json({
+            message: err
+          });
+        }
+        res.json(message);
+        this.io.emit("SERVER:NEW_MESSAGE", message);
+      });
     })
     .catch(reason => {
-      res.json(reason)
+      res.json(reason);
     });
-  }
+  };
 
-  delete(req: express.Request, res: express.Response) {
+  delete = (req: express.Request, res: express.Response) => {
     const id: string = req.params.id;
     MessageModel.findOneAndRemove({ _id: id})
       .then(mess => {
@@ -47,7 +68,7 @@ class MessageController {
           message: 'Message not found'
         });
       });
-  }
+  };
 }
 
 export default MessageController;

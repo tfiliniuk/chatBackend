@@ -1,33 +1,21 @@
-import mongoose from "mongoose";
-import express from "express";
-import bodyParser from "body-parser";
+import express from 'express';
+import dotenv from 'dotenv';
 
-// import { UserModel } from "./models";
-import { UserController, DialogController, MessageController } from "./controllers";
+import { createServer } from 'http';
+
+import "./core/db";
+import createRoutes from "./core/routes";
+import createSocket from "./core/socket";
+
 
 const app = express();
+const http = createServer(app);
+const io = createSocket(http);
 
-app.use(bodyParser.json());
+dotenv.config();
 
-const User = new UserController();
-const Dialog = new DialogController();
-const Message = new MessageController();
+createRoutes(app, io);
 
-mongoose.connect('mongodb://localhost:27017/chat', {useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false});
-
-app.get("/user/:id", User.index);
-app.post('/user/create', User.create);
-app.delete('/user/:id', User.delete);
-
-app.get("/dialogs", Dialog.index);
-app.post("/dialogs", Dialog.create);
-app.delete('/dialogs/:id', Dialog.delete);
-
-app.get("/messages", Message.index);
-app.post("/messages", Message.create);
-app.delete('/messages/:id', Message.delete);
-
-
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!');
+http.listen(process.env.PORT, function () {
+  console.log(`Server: http://localhost${process.env.PORT}`);
 });
